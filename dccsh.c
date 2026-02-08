@@ -14,16 +14,14 @@ int main(void) {
         
         input[strcspn(input, "\n")] = '\0';
 
-        if (strcmp(input, "exit") == 0) {
-            break;
-        }
-
-        if (strlen(input) == 0) {
+        Command *cmd = parse_input(input);
+        if (cmd == NULL) {
             continue;
         }
+       
+        execute_command(cmd);
+        free_command(cmd);
 
-        char **args = parse_input(input);
-        execute_command(args);
     }
 
     return 0;
