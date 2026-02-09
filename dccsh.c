@@ -4,6 +4,8 @@ int main(void) {
     char input[MAX_INPUT];
 
     while (true) {
+        cleanup_bg_jobs(); // clean up any finished background jobs
+
         printf("dccsh> "); // dubai chewy cookie shell :> 
         fflush(stdout);
 

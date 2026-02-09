@@ -1,5 +1,10 @@
 #include "dccsh.h"
 
+// for background jobs
+static pid_t bg_jobs[MAX_BG_JOBS];
+static int bg_job_count = 0;
+
+
 void execute_command(Command *cmd) {
     if (cmd == NULL)
         return;
@@ -9,8 +14,9 @@ void execute_command(Command *cmd) {
         return;
     }
 
-    // placeholder for external commands
-    printf("external command: %s\n", cmd->command);
+    if (!is_builtin(cmd)) {
+        run_external(cmd);
+    }
 }
 
 // checks if user typed built in func
@@ -52,5 +58,95 @@ void run_builtin(Command *cmd) {
         if (chdir(path) != 0) {
             perror("cd");
         }
+    }
+}
+
+void run_external(Command *cmd) {
+    pid_t pid = fork();
+
+    if (pid < 0) {
+        perror("fork");
+        return;
+    }
+
+    if (pid == 0) {
+        // child process
+        if (apply_io_redirection(cmd) != 0) {
+            exit(1);
+        }
+        execvp(cmd->args[0], cmd->args);
+        perror("execvp");
+        exit(1);
+    } else {
+        // parent process
+        if (cmd->background) {
+            // add to background job tracking
+            add_bg_job(pid);
+        } else {
+            waitpid(pid, NULL, 0);
+        }
+    }
+}
+
+int apply_io_redirection(Command *cmd) {
+    int fd;
+    if (cmd->input_file) {
+        fd = open(cmd->input_file, O_RDONLY);
+        if (fd < 0) {
+            perror("open");
+            return -1;
+        }
+        dup2(fd, STDIN_FILENO);
+        close(fd);
+    }
+    if (cmd->output_file) {
+        int flags = O_WRONLY | O_CREAT | (cmd->append ? O_APPEND : O_TRUNC);
+        fd = open(cmd->output_file, flags, 0644);
+        if (fd < 0) {
+            perror("open");
+            return -1;
+        }
+        dup2(fd, STDOUT_FILENO);
+        close(fd);
+    }
+    return 0;
+}
+
+// add background job to tracking list
+void add_bg_job(pid_t pid) {
+    if (bg_job_count < MAX_BG_JOBS) {
+        bg_jobs[bg_job_count++] = pid;
+        printf("Started background job [%d] %d\n", bg_job_count, pid);
+    } else {
+        fprintf(stderr, "dccsh: too many background jobs\n");
+    }
+}
+
+// clean up finished background jobs using WNOHANG
+void cleanup_bg_jobs(void) {
+    int status;
+    
+    for (int i = 0; i < bg_job_count; i++) {
+        pid_t result = waitpid(bg_jobs[i], &status, WNOHANG);
+        
+        if (result > 0) {
+            if (WIFEXITED(status)) {
+                printf("[%d]+ Done    %d (exit %d)\n", 
+                       i + 1, bg_jobs[i], WEXITSTATUS(status));
+            } else if (WIFSIGNALED(status)) {
+                printf("[%d]+ Terminated    %d (signal %d)\n", 
+                       i + 1, bg_jobs[i], WTERMSIG(status));
+            } else {
+                printf("[%d]+ Done    %d\n", i + 1, bg_jobs[i]);
+            }
+            
+            for (int j = i; j < bg_job_count - 1; j++) {
+                bg_jobs[j] = bg_jobs[j + 1];
+            }
+            bg_job_count--;
+            i--; 
+        }
+        // result == 0: still running, continue
+        // result == -1: error (already reaped or invalid PID)
     }
 }

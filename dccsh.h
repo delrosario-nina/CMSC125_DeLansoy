@@ -7,7 +7,12 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <signal.h>
 
+
+#define MAX_BG_JOBS 100
 #define MAX_ARGS 64
 #define MAX_INPUT 1024
 
@@ -28,5 +33,9 @@ void execute_command(Command *cmd);
 // insert evaluator functions here
 bool is_builtin(Command *cmd);
 void run_builtin(Command *cmd);
+int apply_io_redirection(Command *cmd);
+void run_external(Command *cmd);
+void sigchld_handler(int signo);
+void cleanup_bg_jobs(void);
 
 #endif
