@@ -3,12 +3,12 @@
 Del Rosario, Nina Claudia
 Lansoy, Sam
 
-#Overview
+# Overview
 
 dccsh is a simple UNIX-like command-line shell written in C.
 It demonstrates core operating system concepts such as process creation, command execution, I/O redirection, built-in commands, and background job handling.
 
-###Features implemented so far:
+### Features implemented so far:
 
 **Interactive Shell Loop**
 
@@ -65,9 +65,9 @@ grep main dccsh.c
 **I/O Redirection**
 
 Supports standard input and output redirection:
-+ < file : read input from a file
-+ > file : write output to a file (overwrite)
-+ >> file : write output to a file (append)
+< file : read input from a file
+> file : write output to a file (overwrite)
+>> file : write output to a file (append)
 
 Implemented using:
 + open()
