@@ -37,5 +37,7 @@ int apply_io_redirection(Command *cmd);
 void run_external(Command *cmd);
 void sigchld_handler(int signo);
 void cleanup_bg_jobs(void);
+void add_bg_job(pid_t pid);
+void cleanup_bg_jobs(void);
 
 #endif

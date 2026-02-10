@@ -1,236 +1,108 @@
-# Members:
-Del Rosario, Nina Claudia
 
+**Members**
+Del Rosario, Nina Claudia
 Lansoy, Sam
 
+#Overview
 
-# Problem Analysis:
-Main Problem: Creating a shell (command line interpreter) to better understand how a user interacts with an operating system.
+dccsh is a simple UNIX-like command-line shell written in C.
+It demonstrates core operating system concepts such as process creation, command execution, I/O redirection, built-in commands, and background job handling.
 
-### Subproblems:
-**a. User Input Loop**
+###Features implemented so far:
 
-What it needs to do:
-- display a continuous prompt to show the shell is ready (like "dcc> ")
-- read complete lines of user input (could be short like "ls" or long with many arguments)
-- detect end-of-file
-- keep running after each command finishes
+**Interactive Shell Loop**
 
+Displays a continuous prompt:
+dccsh>
 
-**b. Command Parsing and Tokenization:**
+Reads full lines of user input
+Handles end-of-file (Ctrl+D) 
+Continues running after each command execution unless user types exit
 
-What it needs to do:
-- transform raw user input (string) into structured data that can be executed
-- split the input into command name and arguments
-- identify and extract special symbols (>, <, >>, &)
-- handle edge cases like multiple spaces, tabs, quotes
-- detect syntax errors (like "ls > > file.txt" or "> < file")
-- build a data structure that contains all the info needed for execution
+**Command Parsing**
 
+Converts raw user input into a structured Command object
+Tokenizes input based on spaces
 
-**c. Process creation and execution:** execute external commands in separate processes while keeping the shell running.
+Identifies:
++ command name and arguments
++ input redirection (<)
++ output redirection (> and >>)
++ background execution (&)
++ Detects basic syntax errors (missing filenames after redirection, real error handling is still WIP)
++ Ignores empty commands
 
-What it needs to do:
-- execute external commands (ls, cat, grep, etc.) in separate processes
-- keep the shell itself running while commands execute
-- understand the difference between built-in commands (run by shell) and external commands (run as new process)
-- use fork() to create a child process
-- use exec() to replace child with the actual program
-- use wait() to know when the command finishes
+**Built-in Commands**
 
+Built-in commands are executed directly by the shell (without fork()):
 
-**d. I/O Redirection**
++ cd [path]
+  + Changes the current working directory
+  + Defaults to $HOME if no path is given
 
-What it needs to do:
-- redirect standard output to a file when user types > or >>
-- redirect standard input from a file when user types 
-- handle output redirection modes:
-  - `>` : overwrite file (truncate)
-  - `>>` : append to file
-- manipulate file descriptors (dup2) to connect stdin/stdout to files
-- handle errors (file doesn't exist, no write permission, etc.)
++ pwd
+  + Prints the current working directory
 
++ exit
+  + Terminates the shell
 
-**e. Built-in Command Implementation:** commands that modify the shells' own state
-What it needs to do:
-- implement commands that MUST run in the shell's own process:
-  - `cd` : change the shell's current directory
-  - `exit` : terminate the shell
-  - `pwd` : print the shell's current working directory
-  - (optional) `echo`, `export`, `jobs`
-- use system calls like chdir(), getcwd(), exit()
-- handle errors (directory doesn't exist, permission denied)
-- NOT fork when running these (they run in the shell itself)
+**External Command Execution**
 
+Executes non–built-in commands using:
 
-**f. Background Jobs:** allow commands to run in the background while the shell remains interactive.
++ fork() to create a child process
++ execvp() to run the program
 
-What it needs to do:
-- detect & symbol at the end of commands
-- run the command without waiting for it to finish
-- immediately return to the prompt so user can type more commands
+Parent process waits for foreground jobs using waitpid()
 
-
-**g. Error handling:** handle various error conditions without crashing the shell.
-
-What it needs to do:
-- check return values of all system calls (fork, exec, open, chdir, etc.)
-- validate user input before executing (syntax errors, empty commands)
-- handle all error types:
-  - **Parsing errors**: invalid syntax like "> >", "< <", unmatched quotes
-  - **Command not found**: exec() fails because program doesn't exist
-  - **Permission errors**: can't execute file, can't read/write file
-  - **File errors**: can't open file for redirection, file doesn't exist
-  - **Built-in errors**: cd to non-existent directory, invalid arguments
-- print clear, helpful error messages
-
-
-# Solution Architecture:
-
-**a. User Input Loop**
-Pseudocode:
+Examples:
 ```
-while (true) {
-    display_prompt()              // Show "dcc> "
-    input = read_input()          // Read line from user
-    if (input is EOF or "exit")   // Check for exit conditions
-         → break                     // Exit shell 
-    if (input is empty/whitespace)
-         → continue                  // Skip empty lines
-    tokens = parse_input(input)   // Convert to Command struct
-    if (parse_error)              // Check if parsing succeeded
-         → display_error()
-         → continue                  // Don't execute bad commands
-    execute_command(tokens)       // Run the command
-}
+ls -l
+cat file.txt
+grep main dccsh.c 
 ```
 
-**b. Command Parsing and Tokenization:** Convert raw user input string into a structured command that can be executed. This is where we make sense of what the user typed.
+**I/O Redirection**
 
-Pseudocode:
+Supports standard input and output redirection:
++ < file : read input from a file
++ > file : write output to a file (overwrite)
++ >> file : write output to a file (append)
 
-    - split input string into command and arguments
-    - detect syntax errors in input and handle multiple cases (special cases, multiple spaces and tabs, long arguments)
-    - create data structures and functions for the tokens
-    
-Data structure:
+Implemented using:
++ open()
++ dup2()
++ proper file descriptor management
+
+Example:
 ```
-typedef struct {
-    char *command;        // Command name
-    char *args[256];      // Arguments (NULL-terminated)
-    char *input_file;     // For < redirection (NULL if none)
-    char *output_file;    // For > or >> redirection (NULL if none)
-    bool append;          // true for >>, false for >
-    bool background;      // true if & present
-} Command;
-```
-
-**c. Process creation and execution:** Handles command execution using fork/exec/wait
-
-after parsing the input string, it will be differentiated based on whether it is a built-in command or external command before being executed.
-
-Pseudocode:
-```
-execute_command(cmd):
-    if is_builtin(cmd->command):
-        execute_builtin(cmd)
-    else:
-        execute_external(cmd)
+ls > files.txt
+cat < input.txt
+echo hello >> log.txt
 ```
 
-**d. I/O Redirection:** Manages file redirection (>, <, >>) to make commands read from/write to files.
+**Background Jobs**
 
-types of redirection:
-  * output redirection (>) - Save output to a file (replaces file contents)
-  * append redirection (>>) - Add output to the end of a file
-  * input redirection (<) - Read from a file instead of keyboard
++ Commands ending with & run in the background
++ Shell immediately returns to the prompt
++ Background process IDs are tracked internally
++ Finished background jobs are cleaned up using:
+  + waitpid(pid, &status, WNOHANG)
++ Prevents zombie processes and keeps the shell responsive
 
-Pseudocode:
+Example:
 ```
-for output redirection (> or >>)
-  1. open the file (create if it doesn't exist)
-  2. use dup2() to make stdout point to the file
-  3. now when the command prints, it goes to the file
-  4. close the file when done
-
-for input redirection (<)
-  1. open the file for reading
-  2. use dup2() to make stdin read from the file
-  3. now when the command reads input, it comes from the file
-  4. close the file when done
+sleep 10 &
 ```
 
-**e. Built-in Command Implementation:**
+**Error Handling**
 
-after checking that the command is built-in, it will then run the appropriate built-in per each command (exit, cd, pwd)
-
-for cd:
-- get the directory path from arguments
-- call chdir(path) to change directory
-- if it fails, print error message
-
-for pwd:
-- call getcwd() to get current directory
-- print the result
-- if it fails, print error message
-
-for exit:
-- optionally get exit code from arguments
-- print goodbye message
-- call exit() to terminate the shell
-
-
-**f. Background Jobs**
-
-use waitpid()
-        - waiting for specific child processes
-        - non-blocking checks using WNOHANG (prevents parent from hanging if child has not yet terminated or changed state
-/// wait blocks (nagffreeze ang shell) so waitpid is better 
-
-therefore, the shell tracks background process IDs and calls waitpid() with the WNOHANG option at the start of each command loop iteration. This allows the shell to clean up finished background processes without blocking. Basically, it makes the shell responsive while handling background processes (avoids zombie processes) 
-```
-ex. 
-waitpid(id, &status, WNOHANG)
-```
-
-**g. Error Handling**
-- implemented thru checking the return values of the system calls and validating the parsed user input before it will be executed. If error, then it will print what error message 
-
-Error handling includes:
-
-- Parsing error (invalid syntax and shi)
-- process creation error
-- built-in command errors
-- invalid arguments
-- etc. 
-
-
-# Data Flow
-```
-User Input: "ls -l > output.txt"
-    ↓
-read_input()  → "ls -l > output.txt"
-    ↓
-parse_input(input) → Command {
-                    command: "ls"
-                    args: ["ls", "-l", NULL]
-			   Input_file: NULL
-                    output_file: "output.txt"
-                    append_mode: 0
-                    background: 0
-                }
-    ↓
-execute_command() → determine if “ls” is built-in? No
-    ↓
-execute_externalcommand → fork()
-    ↓
-Child: setup_redirections() → open("output.txt"), dup2()
-       execvp("ls", ["ls", "-l", NULL])
-    ↓
-Parent: wait()
-    ↓
-Command complete → Back to main loop
-```
++ The shell checks return values of system calls and handles errors safely without crashing:
+  + fork() and execvp() failures
++ Invalid redirection syntax
++ File open errors
++ Built-in command errors (invalid cd, missing HOME, etc.)
++ Prints helpful error messages using perror() or fprintf()
 
 # Estimated Implementation Timeline:
 

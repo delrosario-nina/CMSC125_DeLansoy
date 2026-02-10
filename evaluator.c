@@ -4,7 +4,6 @@
 static pid_t bg_jobs[MAX_BG_JOBS];
 static int bg_job_count = 0;
 
-
 void execute_command(Command *cmd) {
     if (cmd == NULL)
         return;
