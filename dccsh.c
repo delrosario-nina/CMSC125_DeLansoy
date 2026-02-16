@@ -18,7 +18,7 @@ int main(void) {
         
         input[strcspn(input, "\n")] = '\0';
 
-        //creates a copy of the input 
+        //creates a copy of the input to prevent memory issues 
         char *input_copy = malloc(strlen(input) + 1);
         if (input_copy == NULL) {
             fprintf(stderr, "Memory allocation failed\n");
