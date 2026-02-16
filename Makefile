@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -std=c99 -D_POSIX_C_SOURCE=200800
+CFLAGS = -Wall -Wextra -std=c99 -D_POSIX_C_SOURCE=200809L
 
 SRCS = dccsh.c parser.c evaluator.c
 OBJS = $(SRCS:.c=.o)

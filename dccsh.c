@@ -1,12 +1,14 @@
 #include "dccsh.h"
+#include <string.h>
+#include <stdlib.h>
 
 int main(void) {
     char input[MAX_INPUT];
 
     while (true) {
-        cleanup_bg_jobs(); // clean up any finished background jobs
+        cleanup_bg_jobs();
 
-        printf("dccsh> "); // dubai chewy cookie shell :> 
+        printf("dccsh> ");
         fflush(stdout);
 
         if (fgets(input, sizeof(input), stdin) == NULL) {
@@ -16,14 +18,22 @@ int main(void) {
         
         input[strcspn(input, "\n")] = '\0';
 
-        Command *cmd = parse_input(input);
+        //creates a copy of the input 
+        char *input_copy = malloc(strlen(input) + 1);
+        if (input_copy == NULL) {
+            fprintf(stderr, "Memory allocation failed\n");
+            continue;
+        }
+        strcpy(input_copy, input);
+
+        Command *cmd = parse_input(input_copy);
         if (cmd == NULL) {
+            free(input_copy);
             continue;
         }
        
         execute_command(cmd);
         free_command(cmd);
-
     }
 
     return 0;
