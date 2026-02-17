@@ -23,6 +23,7 @@ typedef struct {
     char *output_file;    // For > or >> redirection (NULL if none)
     bool append;          // true for >>, false for >
     bool background;      // true if & present
+    char *input_buffer;  // track the malloc copy
 } Command;
 
 // insert parser functions here

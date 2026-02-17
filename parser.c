@@ -25,7 +25,7 @@ Command *parse_input(char *input) {
         if (strcmp(token, "<") == 0) {
             token = strtok(NULL, " ");
             if (token == NULL) {
-                fprintf(stderr, "dccsh: syntax error <\n"); // placeholder danay
+                fprintf(stderr, "dccsh: syntax error: expected filename after '<'\n");
                 free_command(cmd);
                 return NULL;
             }
@@ -34,7 +34,7 @@ Command *parse_input(char *input) {
         } else if (strcmp(token, ">") == 0) {
             token = strtok(NULL, " ");
             if (token == NULL) {
-                fprintf(stderr, "dccsh: syntax error >\n");
+                fprintf(stderr, "dccsh: syntax error: expected filename after '>'\n");
                 free_command(cmd);
                 return NULL;
             }
@@ -44,7 +44,7 @@ Command *parse_input(char *input) {
         } else if (strcmp(token, ">>") == 0) {
             token = strtok(NULL, " ");
             if (token == NULL) {
-                fprintf(stderr, "dccsh: syntax error near >>\n");
+                fprintf(stderr, "dccsh: syntax error: expected filename after '>>'\n");
                 free_command(cmd);
                 return NULL;
             }
@@ -55,6 +55,12 @@ Command *parse_input(char *input) {
             cmd->background = true;
 
         } else {
+            // checks if sobrang argument
+            if (argc >= MAX_ARGS - 1) {
+                fprintf(stderr, "dccsh: too many arguments\n");
+                free_command(cmd);
+                return NULL;
+            }
             cmd->args[argc++] = token;
         }
 
@@ -77,6 +83,3 @@ void free_command(Command *cmd) {
         free(cmd);
     }
 }
-
-
-// parse_input(input) function

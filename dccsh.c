@@ -27,13 +27,14 @@ int main(void) {
         strcpy(input_copy, input);
 
         Command *cmd = parse_input(input_copy);
-        if (cmd == NULL) {
-            free(input_copy);
-            continue;
-        }
-       
-        execute_command(cmd);
-        free_command(cmd);
+            if (cmd == NULL) {
+                free(input_copy);
+                continue;
+            }
+
+            execute_command(cmd);
+            free_command(cmd);
+            free(input_copy);  
     }
 
     return 0;
