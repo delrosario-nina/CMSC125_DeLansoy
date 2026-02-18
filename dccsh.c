@@ -6,8 +6,6 @@ int main(void) {
     char input[MAX_INPUT];
 
     while (true) {
-        cleanup_bg_jobs();
-
         printf("dccsh> ");
         fflush(stdout);
 
@@ -32,9 +30,12 @@ int main(void) {
                 continue;
             }
 
-            execute_command(cmd);
-            free_command(cmd);
-            free(input_copy);  
+                execute_command(cmd);
+                free_command(cmd);
+                free(input_copy);
+
+                /* perform background job cleanup after command handling */
+                cleanup_bg_jobs();
     }
 
     return 0;
