@@ -74,15 +74,22 @@ void run_external(Command *cmd) {
             exit(1);
         }
         execvp(cmd->args[0], cmd->args);
-        perror("execvp");
-        exit(1);
+        if (errno == ENOENT || errno == EACCES) {
+            fprintf(stderr, "%s: command not found\n", cmd->args[0]);
+        } else {
+            perror(cmd->args[0]);
+        }
+        _exit(127);
     } else {
         // parent process
         if (cmd->background) {
             // add to background job tracking
             add_bg_job(pid);
         } else {
-            waitpid(pid, NULL, 0);
+            pid_t w = waitpid(pid, NULL, 0);
+            if (w == -1) {
+                perror("waitpid");
+            }
         }
     }
 }
@@ -95,8 +102,15 @@ int apply_io_redirection(Command *cmd) {
             perror("open");
             return -1;
         }
-        dup2(fd, STDIN_FILENO);
-        close(fd);
+        if (dup2(fd, STDIN_FILENO) == -1) {
+            perror("dup2");
+            close(fd);
+            return -1;
+        }
+        if (close(fd) == -1) {
+            perror("close");
+            return -1;
+        }
     }
     if (cmd->output_file) {
         int flags = O_WRONLY | O_CREAT | (cmd->append ? O_APPEND : O_TRUNC);
@@ -105,8 +119,15 @@ int apply_io_redirection(Command *cmd) {
             perror("open");
             return -1;
         }
-        dup2(fd, STDOUT_FILENO);
-        close(fd);
+        if (dup2(fd, STDOUT_FILENO) == -1) {
+            perror("dup2");
+            close(fd);
+            return -1;
+        }
+        if (close(fd) == -1) {
+            perror("close");
+            return -1;
+        }
     }
     return 0;
 }
@@ -144,8 +165,21 @@ void cleanup_bg_jobs(void) {
             }
             bg_job_count--;
             i--; 
+        } else if (result == 0) {
+            /* still running */
+            continue;
+        } else {
+            /* result == -1 */
+            if (errno == ECHILD) {
+                /* no such child; remove stale PID */
+                for (int j = i; j < bg_job_count - 1; j++) {
+                    bg_jobs[j] = bg_jobs[j + 1];
+                }
+                bg_job_count--;
+                i--;
+                continue;
+            }
+            perror("waitpid");
         }
-        // result == 0: still running, continue
-        // result == -1: error (already reaped or invalid PID)
     }
 }
