@@ -33,9 +33,11 @@ int main(void) {
                 execute_command(cmd);
                 free_command(cmd);
                 free(input_copy);
-
-                /* perform background job cleanup after command handling */
-                cleanup_bg_jobs();
+                
+                // cleans up any finished bg jobs
+                if (get_bg_job_count() > 0) {
+                    cleanup_bg_jobs();
+                }
     }
 
     return 0;

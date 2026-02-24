@@ -36,8 +36,8 @@ bool is_builtin(Command *cmd);
 void run_builtin(Command *cmd);
 int apply_io_redirection(Command *cmd);
 void run_external(Command *cmd);
-void sigchld_handler(int signo);
 void cleanup_bg_jobs(void);
+int get_bg_job_count(void);
 void add_bg_job(pid_t pid);
 void cleanup_bg_jobs(void);
 

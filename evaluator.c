@@ -183,3 +183,8 @@ void cleanup_bg_jobs(void) {
         }
     }
 }
+
+// gets bg count
+int get_bg_job_count(void) {
+    return bg_job_count;
+}
