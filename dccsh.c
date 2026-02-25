@@ -26,13 +26,14 @@ int main(void) {
 
         Command *cmd = parse_input(input_copy);
             if (cmd == NULL) {
-                free(input_copy);
+                /* parse_input already takes ownership of the buffer when it fails, so
+                   nothing to free here */
                 continue;
             }
 
                 execute_command(cmd);
+                /* free_command will now also release the input buffer */
                 free_command(cmd);
-                free(input_copy);
                 
                 // cleans up any finished bg jobs
                 if (get_bg_job_count() > 0) {
