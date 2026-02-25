@@ -1,0 +1,42 @@
+echo banana > unsorted.txt
+echo apple >> unsorted.txt
+echo cherry >> unsorted.txt
+echo deer >> sorted.txt
+echo line1 > input.txt
+echo line2 >> input.txt
+echo line3 >> input.txt
+echo line4 >> input.txt
+echo line5 >> input.txt
+echo hello world > hello.txt
+pwd
+cd /nonexistent_xyz
+cd /home/fatdog/cmsc125/labs/CMSC125_DeLansoy
+pwd
+echo hello world
+ls
+ls -la
+wc -l input.txt
+cat hello.txt
+nonexistent_cmd_xyz
+
+echo redirect test > out_test.txt
+cat out_test.txt
+echo overwrite me > ow_test.txt
+echo overwritten > ow_test.txt
+cat ow_test.txt
+echo first line > append_test.txt
+echo second line >> append_test.txt
+cat append_test.txt
+wc -l < input.txt
+cat < hello.txt
+sort < unsorted.txt > sorted_out.txt
+cat sorted_out.txt
+sort > sorted_rev.txt < unsorted.txt
+cat sorted_rev.txt
+ls > /dev/null
+sleep 60 &
+echo shell still responsive
+sleep 0 &
+echo another bg job done
+echo a b c d e f g h i j k
+exit

@@ -30,7 +30,8 @@ bool is_builtin(Command *cmd) {
 
 void run_builtin(Command *cmd) {
     // if exit, shell exits lol 
-    if (strcmp(cmd->command, "exit") == 0) {
+    // printf("DEBUG: input='%s' len=%zu\n", cmd->input_buffer, strlen(cmd->input_buffer));
+    if (strcmp(cmd->command, "exit") == 0) {;
         exit(0);
     }
 

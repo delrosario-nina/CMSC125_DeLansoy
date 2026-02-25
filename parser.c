@@ -84,9 +84,9 @@ Command *parse_input(char *input) {
 void free_command(Command *cmd) {
     // outer if makes sure that cmd is not null to avoid crashing
     if (cmd) {
-        if (cmd->input_buffer) {
-            free(cmd->input_buffer);
-        }
+        // if (cmd->input_buffer) {
+        //     free(cmd->input_buffer);
+        // }
         free(cmd);
     }
 }
