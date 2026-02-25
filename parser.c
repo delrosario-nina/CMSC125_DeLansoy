@@ -7,7 +7,10 @@ Command *parse_input(char *input) {
         return NULL;
     }
 
-    // initialize
+    // remember the original buffer so it can be freed later
+    cmd->input_buffer = input;
+
+    // initialize other fields
     cmd->command = NULL;
     cmd->input_file = NULL;
     cmd->output_file = NULL;
