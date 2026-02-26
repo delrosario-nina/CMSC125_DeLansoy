@@ -109,3 +109,8 @@ The project is split across a few focused files:
 **Background job cleanup** — rather than using `SIGCHLD`, cleanup is done synchronously at the top of each loop iteration using `WNOHANG`. This keeps the design simple and avoids signal handler complexity, at the cost of only reaping jobs between commands.
 
 **I/O redirection in the child** — redirection is applied after `fork()` but before `execvp()`, so it only affects the child's file descriptors and never touches the shell's own stdin/stdout.
+
+
+## Sample Test Cases
+![alt text](image.png)
+![alt text](image-1.png)
